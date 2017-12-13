@@ -32,10 +32,10 @@ public class PerfTest extends TestCase {
 
     private void perf(IPv4RadixIntTree tr) throws UnknownHostException {
         long start = System.currentTimeMillis();
-        for (int i = 0; i < 1000 * 1000 * 10; ++i) {
-//            tr.selectValue("95.26.186.69");
+        for (int i = 0; i < 1000 * 1000 * 1; ++i) {
+            tr.selectValue("95.26.186.69");
 //            tr.selectValue(1595587141L);
-            IPv4RadixIntTree.inet_aton("95.26.186.69");
+//            IPv4RadixIntTree.inet_aton("95.26.186.69");
         }
         long millis = System.currentTimeMillis() - start;
         System.out.println("millis : " + millis);

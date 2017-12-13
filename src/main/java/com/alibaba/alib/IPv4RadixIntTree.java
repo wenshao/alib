@@ -17,9 +17,7 @@ package com.alibaba.alib;
  */
 
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.UnknownHostException;
 
 /**
@@ -316,7 +314,7 @@ public class IPv4RadixIntTree {
         }
     }
 
-    public static long inet_aton(String line) throws UnknownHostException {
+    private static long inet_aton(String line) throws UnknownHostException {
         int address = 0;
         for (int i = 0
              , len = line.length()
@@ -360,21 +358,34 @@ public class IPv4RadixIntTree {
     }
 
     private static int countLines(String filename) throws IOException {
-        BufferedReader reader = null;
+        InputStream in = null;
         try {
-            reader = new BufferedReader(new FileReader(filename));
+            in = new FileInputStream(filename);
 
-            int n = 0;
-            for (;;n++) {
-                String line = reader.readLine();
-                if (line == null) {
+            int lines = 0;
+
+            byte[] bytes = new byte[8192];
+            byte b = 0;
+            for (;;) {
+                int len = in.read(bytes);
+                if (len < 0) {
+                    if (b != '\n') {
+                        lines++;
+                    }
                     break;
                 }
+                for (int i = 0; i < len; ++i) {
+                    b = bytes[i];
+                    if (b == '\n') {
+                        lines++;
+                    }
+                }
             }
-            return n;
+
+            return lines;
         } finally {
-            if (reader != null) {
-                reader.close();
+            if (in != null) {
+                in.close();
             }
         }
     }

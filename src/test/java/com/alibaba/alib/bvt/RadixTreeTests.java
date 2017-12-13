@@ -31,7 +31,8 @@ public class RadixTreeTests extends TestCase {
             assertEquals("Mismatch in line #" + n, tr.selectValue(c[0]), Integer.parseInt(c[1]));
             n++;
         }
-        System.out.println(tr.size());
+        assertEquals(946225, tr.size());
+//        System.out.println(tr.size());
     }
 
     public void testNginx() throws IOException {
@@ -48,6 +49,6 @@ public class RadixTreeTests extends TestCase {
                     , tr.selectValue(c[0]));
             n++;
         }
-        System.out.println(tr.size());
+        assertEquals(2164, tr.size());
     }
 }
