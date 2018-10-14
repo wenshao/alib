@@ -1,6 +1,6 @@
 package com.alibaba.alib.bvt;
 
-import com.alibaba.alib.IPv4RadixIntTree;
+import com.alibaba.alib.net.IPv4RadixIntTree;
 import junit.framework.TestCase;
 
 import java.io.BufferedReader;

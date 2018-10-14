@@ -1,6 +1,5 @@
 package com.alibaba.alib.pvt;
 
-import com.alibaba.alib.IPv4RadixIntTree;
 import junit.framework.TestCase;
 
 public class CountLineTest extends TestCase {

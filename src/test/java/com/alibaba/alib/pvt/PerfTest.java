@@ -1,10 +1,8 @@
 package com.alibaba.alib.pvt;
 
-import com.alibaba.alib.IPv4RadixIntTree;
+import com.alibaba.alib.net.IPv4RadixIntTree;
 import junit.framework.TestCase;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
