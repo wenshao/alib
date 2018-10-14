@@ -6,8 +6,12 @@ import junit.framework.TestCase;
 import java.nio.charset.Charset;
 
 public class Utf8Utils_Test extends TestCase {
-    public void test_0() throws Exception {
+    protected void setUp() throws Exception {
         System.out.println("jdk : " + System.getProperty("java.runtime.version"));
+    }
+
+    public void test_0() throws Exception {
+
         {
             char[] chars = S0.toCharArray();
             byte[] bytes = new byte[chars.length * 3];
@@ -26,6 +30,62 @@ public class Utf8Utils_Test extends TestCase {
 //                perf_2(S1, bytes); // 21
             }
         }
+    }
+
+    public void test_decode() throws Exception {
+        for (int i = 0; i < 5; ++i) {
+//            perf_decode_chinese(); // 707
+//            perf_decode_chinese_str(); // 780
+//            perf_decode_chinese_unsafe(); // 591
+            perf_decode_chinese_unsafe2(); // 750
+        }
+
+    }
+
+    static void perf_decode_chinese() throws Exception {
+        byte[] bytes = S0.getBytes(Charset.forName("utf8"));
+        char[] chars = new char[bytes.length];
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1000 * 1000; ++i) {
+            int dp = Utf8Utils.decodeUTF8(bytes, 0, bytes.length, chars, 0);
+            new String(chars, 0, dp);
+        }
+        System.out.println("decode chinese millis : " + (System.currentTimeMillis() - start));
+    }
+
+    static void perf_decode_chinese_unsafe() throws Exception {
+        byte[] bytes = S0.getBytes(Charset.forName("utf8"));
+        char[] chars = new char[bytes.length];
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1000 * 1000; ++i) {
+            int dp = Utf8Utils.decodeUTF8_unsafe(bytes, 0, bytes.length, chars, 0);
+            new String(chars, 0, dp);
+        }
+        System.out.println("decode chinese unsafe millis : " + (System.currentTimeMillis() - start));
+    }
+
+    static void perf_decode_chinese_unsafe2() throws Exception {
+        byte[] bytes = S0.getBytes(Charset.forName("utf8"));
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1000 * 1000; ++i) {
+            Utf8Utils.decodeUTF8_unsafe(bytes, 0, bytes.length);
+        }
+        System.out.println("decode chinese unsafe millis : " + (System.currentTimeMillis() - start));
+    }
+
+    static void perf_decode_chinese_str() throws Exception {
+        Charset utf8 = Charset.forName("utf8");
+        byte[] bytes = S0.getBytes(utf8);
+        char[] chars = new char[bytes.length];
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1000 * 1000; ++i) {
+            new String(bytes, 0, bytes.length, utf8);
+        }
+        System.out.println("decode chinese str millis : " + (System.currentTimeMillis() - start));
     }
 
     static final Charset UTF8 = Charset.forName("utf8");
