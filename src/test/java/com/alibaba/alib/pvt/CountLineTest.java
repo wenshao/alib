@@ -1,5 +1,6 @@
 package com.alibaba.alib.pvt;
 
+import com.alibaba.alib.net.IPv4RadixIntTree;
 import junit.framework.TestCase;
 
 public class CountLineTest extends TestCase {
@@ -14,7 +15,7 @@ public class CountLineTest extends TestCase {
     void perf() throws Exception {
         long start = System.currentTimeMillis();
         for (int i = 0; i < 10 * 1; ++i) {
-//            IPv4RadixIntTree.countLines1(file);
+            IPv4RadixIntTree.countLines(file);
         }
         long millis = System.currentTimeMillis() - start;
         System.out.println("millis : " + millis);

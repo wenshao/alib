@@ -19,6 +19,8 @@ package com.alibaba.alib.net;
 
 import java.io.*;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * A minimalistic, memory size-savvy and fairly fast radix tree (AKA Patricia trie)
@@ -230,33 +232,77 @@ public class IPv4RadixIntTree {
      * @throws IOException
      */
     public static IPv4RadixIntTree loadFromLocalFile(String filename, boolean nginxFormat) throws IOException {
-        IPv4RadixIntTree tr = new IPv4RadixIntTree(countLines(filename));
-        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        byte[] bytes = new byte[1024 * 16];
+
+        int lines = countLines(filename, bytes);
+        IPv4RadixIntTree tr = new IPv4RadixIntTree(lines);
+        FileInputStream in = new FileInputStream(filename);
         try {
-            tr.init(reader, nginxFormat);
+            tr.init(in, nginxFormat, bytes);
         } finally {
-            reader.close();
+            in.close();
         }
 
         return tr;
     }
 
-    private void init(BufferedReader reader, boolean nginxFormat) throws IOException {
+    private int readLine(InputStream in, ByteBuffer buf, byte[] dest) throws IOException {
+        byte[] bytes = buf.array();
+        int limit = buf.limit();
+
+        int pos = buf.position();
+        int remaining = limit - pos;
+        if (remaining < 32) {
+            if (remaining > 0) {
+                System.arraycopy(bytes, pos, bytes, 0, remaining);
+                buf.position(pos = 0);
+                buf.limit(limit = remaining);
+            }
+            int len = in.read(bytes, limit, bytes.length / 2);
+            if (len == -1) {
+                return -1;
+            }
+
+            if (len > 0) {
+                limit += len;
+                buf.limit(limit);
+            }
+        }
+
+
+        for (int i = pos; i < limit; ++i) {
+            byte b = bytes[i];
+            if (b == '\n') {
+                int len = i - pos;
+                System.arraycopy(bytes, pos, dest, 0, len);
+                buf.position(i + 1);
+                return len;
+            }
+        }
+
+        return -1;
+    }
+
+    private void init(InputStream in, boolean nginxFormat, byte[] bytes) throws IOException {
+        ByteBuffer buf = ByteBuffer.wrap(bytes);
+        buf.flip();
+
+        byte[] line = new byte[32];
         for (;;) {
-            String line = reader.readLine();
-            if (line == null) {
+            int len = readLine(in, buf, line);
+
+            if (len == -1) {
                 break;
             }
 
             int b0 = 0, b1 = 0, b2 = 0, b3 = 0;
             int cidr = 0, port = 0;
             for (int i = 0
-                 , len = line.length()
                  , val = 0
                  , p = 0
                  ; i < len; ++i)
             {
-                char ch = line.charAt(i);
+                char ch = (char) line[i];
 
                 if (ch >= '0' && ch <= '9') {
                     if (nginxFormat && p == 5) {
@@ -268,7 +314,7 @@ public class IPv4RadixIntTree {
                     val = val * 16 + (ch - 87);
                 } else if (ch == '.') {
                     if (ch > 255) {
-                        throw new UnknownHostException("illegal ip : " + line);
+                        throw new UnknownHostException("illegal ip : " + new String(line, 0, len, "iso-8859-1"));
                     }
 
                     if (p == 0) {
@@ -278,7 +324,7 @@ public class IPv4RadixIntTree {
                     } else if (p == 2) {
                         b2 = val;
                     } else {
-                        throw new UnknownHostException("illegal ip : " + line);
+                        throw new UnknownHostException("illegal ip : " + new String(line, 0, len, "iso-8859-1"));
                     }
 
                     val = 0;
@@ -293,13 +339,13 @@ public class IPv4RadixIntTree {
                     } else if (p == 5) {
                         port = val;
                     } else {
-                        throw new UnknownHostException("illegal ip : " + line);
+                        throw new UnknownHostException("illegal ip : " + new String(line, 0, len, "iso-8859-1"));
                     }
                     p++;
                 } else if (ch == ';' && i == len - 1) {
                     // skip
                 } else {
-                    throw new UnknownHostException("illegal ip : " + line);
+                    throw new UnknownHostException("illegal ip : " + new String(line, 0, len, "iso-8859-1"));
                 }
 
                 if (i == len - 1) {
@@ -357,14 +403,17 @@ public class IPv4RadixIntTree {
         return address & 0xFFFFFFFFL;
     }
 
-    private static int countLines(String filename) throws IOException {
+    public static int countLines(String filename) throws IOException {
+        byte[] bytes = new byte[8192];
+        return countLines(filename, bytes);
+    }
+
+    private static int countLines(String filename, byte[] bytes) throws IOException {
         InputStream in = null;
         try {
             in = new FileInputStream(filename);
-
             int lines = 0;
 
-            byte[] bytes = new byte[8192];
             byte b = 0;
             for (;;) {
                 int len = in.read(bytes);

@@ -28,6 +28,24 @@ public class PerfTest extends TestCase {
 //        System.out.println(tr.size());
     }
 
+    public void testInit_perf() throws Exception {
+        String file = this.getClass().getClassLoader().getResource("test/ip-prefix-base.txt").getFile();
+
+        for (int i = 0; i < 10; ++i) {
+            perf_init(file); // 488
+        }
+    }
+
+    private void perf_init(String file) throws Exception {
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 10 * 1; ++i) {
+            IPv4RadixIntTree tr = IPv4RadixIntTree.loadFromLocalFile(file, false);
+        }
+        long millis = System.currentTimeMillis() - start;
+        System.out.println("millis : " + millis);
+    }
+
     private void perf(IPv4RadixIntTree tr) throws UnknownHostException {
         long start = System.currentTimeMillis();
         for (int i = 0; i < 1000 * 1000 * 1; ++i) {
